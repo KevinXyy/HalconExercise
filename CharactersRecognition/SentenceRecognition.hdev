@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>* Transfer the rgb image to gray image</c>
+<l>read_image (ImageColored, 'C:/Users/Administrator/Desktop/121111.jpg')</l>
+<l>rgb1_to_gray(ImageColored, Image)</l>
+<c></c>
+<c>* Seperate regions for characters</c>
+<l>dev_set_color('red')</l>
+<l>threshold(Image, Region, 0, 100)</l>
+<l>dev_set_colored(12)</l>
+<l>connection (Region, ConnectedRegions)</l>
+<l>select_shape(ConnectedRegions, SelectedRegions1, 'row', 'and', 34, 77)</l>
+<l>select_shape(SelectedRegions1, SelectedRegions, 'column', 'and', 19, 516)</l>
+<l>sort_region(SelectedRegions, SortedRegions, 'first_point', 'true', 'column')</l>
+<c>* Use cnn based ocr handler to recognise he characters</c>
+<l>read_ocr_class_cnn('Universal_Rej.occ', OCRHandle)</l>
+<l>do_ocr_multi_class_cnn(SortedRegions, Image, OCRHandle, Class, Confidence)</l>
+<c></c>
+<l>create_text_model_reader('auto', 'Universal_Rej.occ', TextModel)</l>
+<l>find_text(Image, TextModel, TextResultID)</l>
+<l>get_text_object(Characters, TextResultID, 'all_lines')</l>
+<l>get_text_result(TextResultID, 'class', ResultValue)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

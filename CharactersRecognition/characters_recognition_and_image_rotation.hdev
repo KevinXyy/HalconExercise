@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<l>dev_update_window('off')</l>
+<c></c>
+<l>dev_set_color('blue')</l>
+<l>read_image (Image, 'C:/Users/Administrator/Pictures/Saved Pictures/52093192_p1.jpg')</l>
+<c></c>
+<c>* Decompose the rgb image as three images corresponding to three channels</c>
+<l>decompose3(Image, Red, Green, Blue)</l>
+<c>* Just for fun, a try for threshold and closing calculation</c>
+<l>threshold(Red, Region, 128, 255)</l>
+<l>dev_open_window_fit_image(Image, 0, 0, -1, -1, WindowHandle)</l>
+<l>closing_circle(Region, RegionClosing, 1.5)</l>
+<l>dev_display(Region)</l>
+<c></c>
+<c>** I. Divide region first then recognise</c>
+<c>* Reduce the region of the image to the part which only contains the characers we want</c>
+<l>gen_rectangle1(Rectangle, 350,33, 384,218)</l>
+<l>reduce_domain(Red, Rectangle, ImageReduced)</l>
+<c>* cnn based recognition is usable only when the characters are of the style light characers on dark background</c>
+<l>invert_image(ImageReduced, ImageInvert)</l>
+<l>threshold(ImageReduced, ReducedRegion, 128, 255)</l>
+<l>dev_set_colored(12)</l>
+<c>* divide the characers</c>
+<l>connection (ReducedRegion, ConnectedRegions)</l>
+<l>select_shape(ConnectedRegions, SelectedRegions2, 'row', 'and', 354, 384)</l>
+<l>select_shape(SelectedRegions2, SelectedRegions1, 'column', 'and', 39, 212)</l>
+<l>sort_region (SelectedRegions1, SortedRegions, 'first_point', 'true', 'column')</l>
+<c>* using cnn to detect the characters and recognise them</c>
+<l>read_ocr_class_cnn('Universal_NoRej.occ',OCRHandle)</l>
+<l>do_ocr_multi_class_cnn (SortedRegions, ImageInvert,OCRHandle, Class, Confidence)</l>
+<c></c>
+<c>** II. Generate the text model and do the recognition directly</c>
+<c>* process the image</c>
+<l>mean_image(ImageReduced, ImageMean, 1, 1)</l>
+<l>emphasize(ImageReduced, ImageEmphasize, 7, 7, 1.2)</l>
+<l>dev_set_color('red')</l>
+<c></c>
+<c>* Use the text model to Get the characters</c>
+<l>create_text_model_reader('auto', 'Universal_NoRej.occ',TextModel)</l>
+<l>set_text_model_param(TextModel, 'polarity', 'dark_on_light')</l>
+<l>find_text(ImageInvert, TextModel, TextResultID)</l>
+<l>get_text_object(Characters, TextResultID, 'all_lines')</l>
+<l>dev_set_color('green')</l>
+<l>dev_display(Characters)</l>
+<l>get_text_result(TextResultID, ['class', 0], ResultValue)</l>
+<c></c>
+<c>*** III. Exercising the uses of rotation and scaling</c>
+<l>hom_mat2d_identity(HomMat2DIdentity)</l>
+<l>Scale := 1</l>
+<l>for Degree := 1 to 30 by 1</l>
+<l>    hom_mat2d_rotate(HomMat2DIdentity, 0, 669.5, 512, HomMat2DRotate)</l>
+<l>    hom_mat2d_scale(HomMat2DRotate, 0.98, 0.98, 669.5, 512, HomMat2DIdentity)</l>
+<l>    affine_trans_image(Image, ImageAffineTrans, HomMat2DIdentity, 'bicubic', 'false')</l>
+<l>    dev_clear_window()</l>
+<l>    dev_display(ImageAffineTrans)</l>
+<l>endfor</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
